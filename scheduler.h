@@ -64,7 +64,7 @@ public:
 			}	
 		}
 		cout << "All the Threads have been executed !! .. Exiting Scheduler ..\n";
-		system("pause");
+		//system("pause");
 	}
 
 	///Dispatch schedules the next thread to execute based on scheduler policy and current work load

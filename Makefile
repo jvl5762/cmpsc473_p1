@@ -9,7 +9,7 @@
 OBJS = myscheduler.o Project1.o
 CXX = g++ 
 CXXFLAGS = -std=c++11 -c -g -Wall
-LFLAGS = -Wall -g
+LFLAGS = -std=c++11 -Wall -g
 
 # Productions
 all : p1
