@@ -5,6 +5,7 @@
 
 // global thread buffer that contains all created threads
 ThreadBuffer buffer;
+ThreadBuffer::iterator it;
 
 //Function to Create Thread(s) and insert them in the student
 //defined data structure
@@ -18,6 +19,7 @@ void MyScheduler::CreateThread(int arriving_time, int remaining_time, int priori
 	new_thread.tid = tid;
 
 	buffer.push_back(new_thread);
+	it = buffer.begin();
 }
 
 bool MyScheduler::Dispatch()
@@ -29,31 +31,20 @@ bool MyScheduler::Dispatch()
 		case FCFS:		//First Come First Serve
 			// sort buffer by arrival time
 			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);
-			//ThreadBuffer::iterator it = buffer.begin()
-
-			// iterate through buffer and dispatch
-			for (ThreadBuffer::iterator it = buffer.begin(); it != buffer.end(); ++it) {
-
-				while(it->remaining_time != 0) {
-					buffer.erase(std::remove(buffer.begin(), buffer.end(), CPUs[0]->tid), buffer.end());
-					CPUs[0] = &(*it);
-					return 1;
+ 			if (!buffer.empty()) {
+ 				for (unsigned int i = 0; i < num_cpu; i++) {
+ 					if (CPUs[i] == NULL && it != buffer.end()) {
+ 						CPUs[i] = &(*it++);
+ 						printf("cpu[%d] has %d\n", i, CPUs[i]->tid);
+ 					}
+ 				}
+ 				for (ThreadBuffer::iterator it_eraser = buffer.begin(); it_eraser != buffer.end(); it_eraser++) {
+					if (it_eraser->remaining_time == 0){
+						buffer.erase(it_eraser);
+					}
 				}
-
+ 				return 1;
  			}
- 			//while (!buffer.empty()) {
- 			//	for (unsigned int i = 0; i < num_cpu && it != buffer.end(); i++) {
- 			//		if (CPUs[i] != NULL) {
- 			//			if (CPUs[i].remaining_time == 0) {
- 			//				buffer.erase(std::remove(buffer.begin(), buffer.end(), CPUs[i].tid), buffer.end());
- 			//				CPUs[i] = &(*it++);
- 			//			}
- 			//		}
- 			//		else {
- 			//			CPUs[i] = &(*it++);
- 			//		}
- 			//	}
- 			//}
  			return 0;
 			break;
 		case STRFwoP:	//Shortest Time Remaining First, without preemption
