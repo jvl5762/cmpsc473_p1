@@ -29,23 +29,30 @@ bool MyScheduler::Dispatch()
 	switch(policy)
 	{
 		case FCFS:		//First Come First Serve
-			// sort buffer by arrival time
 			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);
- 			if (!buffer.empty()) {
- 				for (unsigned int i = 0; i < num_cpu; i++) {
- 					if (CPUs[i] == NULL && it != buffer.end()) {
- 						CPUs[i] = &(*it++);
- 						printf("cpu[%d] has %d\n", i, CPUs[i]->tid);
- 					}
- 				}
- 				for (ThreadBuffer::iterator it_eraser = buffer.begin(); it_eraser != buffer.end(); it_eraser++) {
-					if (it_eraser->remaining_time == 0){
-						buffer.erase(it_eraser);
-					}
+			for (ThreadBuffer::iterator it_eraser = buffer.begin(); it_eraser != buffer.end(); it_eraser++) {
+				if (it_eraser->remaining_time == 0)
+					buffer.erase(it_eraser);
+				if (buffer.empty())
+					return 0;
+			}
+			for (unsigned int i = 0; i < num_cpu; i++) {
+				if (CPUs[i] == NULL && i < buffer.size()) {
+					CPUs[i] = &(buffer[i]);
+					//for (unsigned int j = 0; j < num_cpu && CPUs[i] != NULL && CPUs[j] != NULL; j++) {
+					//	if (i != j)
+					//		printf("if %d == %d ", CPUs[i]->tid, CPUs[j]->tid);
+					//	if (i != j && CPUs[i]->tid == CPUs[j]->tid) {
+					//		printf("then here\n");
+					//		if (num_cpu < buffer.size())
+					//			CPUs[i] = &(buffer[num_cpu]);
+					//		else
+					//			CPUs[i] = NULL;
+					//	}
+					//}
 				}
- 				return 1;
- 			}
- 			return 0;
+			}
+			return 1;
 			break;
 		case STRFwoP:	//Shortest Time Remaining First, without preemption
 
