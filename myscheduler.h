@@ -9,14 +9,12 @@
    which they might find helpful.*/
 
 #include "scheduler.h"
-#include <vector>
 
 // data structure that contains all created threads
-//struct ThreadBuffer {
-//	int finished;					// flag that indicates if process is finished
-//	ThreadDescriptorBlock thread;	// block that describes the thread
-//};
-typedef std::vector<ThreadDescriptorBlock> ThreadBuffer;
+typedef struct {
+   ThreadDescriptorBlock thread; // the job
+   int processing_cpu;           // the cpu currently processing the thread
+} ThreadBuffer;
 
 class MyScheduler: public Scheduler {
 public:
@@ -25,5 +23,5 @@ public:
 	void CreateThread(int arriving_time, int remaining_time, int priority, int tid) override; //Function to create threads and insert them in student defined data structure
 
 	//Declare additional methods(s) below if needed.
-	static bool CompareByArrivalTime(const ThreadDescriptorBlock &a, const ThreadDescriptorBlock &b);
+	static bool CompareByArrivalTime(const ThreadBuffer &a, const ThreadBuffer &b);
 };
