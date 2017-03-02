@@ -24,4 +24,5 @@ public:
 
 	//Declare additional methods(s) below if needed.
 	static bool CompareByArrivalTime(const ThreadBuffer &a, const ThreadBuffer &b);
+   static bool CompareByPriority(const ThreadBuffer &a, const ThreadBuffer &b);
 };

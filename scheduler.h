@@ -48,12 +48,14 @@ public:
 		while(Dispatch())
 		{
 			++timer;
+			//printf("time %d: ", timer);
 			for(unsigned int i = 0; i < num_cpu; ++i)
 			{
 				if (CPUs[i] != NULL)
 
 				{
 					--CPUs[i]->remaining_time;
+					//printf("CPU[%d] working on thread %d | ", i, CPUs[i]->tid);
 
 					if (CPUs[i]->remaining_time == 0) //Prints Thread ID, Finishing Time and Processor Number if a thread has finished executing
 					{
@@ -61,10 +63,11 @@ public:
 						CPUs[i] = NULL;
 					}
 				}
-			}	
+			}
+			//printf("\n");
 		}
 		cout << "All the Threads have been executed !! .. Exiting Scheduler ..\n";
-		//system("pause");
+		system("pause");
 	}
 
 	///Dispatch schedules the next thread to execute based on scheduler policy and current work load
