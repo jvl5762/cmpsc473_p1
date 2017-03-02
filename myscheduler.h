@@ -23,6 +23,8 @@ public:
 	void CreateThread(int arriving_time, int remaining_time, int priority, int tid) override; //Function to create threads and insert them in student defined data structure
 
 	//Declare additional methods(s) below if needed.
+   int RemoveFinishedThreads();
+   void Display();
 	static bool CompareByArrivalTime(const ThreadBuffer &a, const ThreadBuffer &b);
    static bool CompareByPriority(const ThreadBuffer &a, const ThreadBuffer &b);
 };

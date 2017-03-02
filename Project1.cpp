@@ -2,32 +2,62 @@
 //
 
 #include "myscheduler.h"
-#include <algorithm> 
+#include <ctime> 
 
-#define scheduler_num 	4
-#define cpu_num 		2
+#define CPU_NUM 		4
+#define THREAD_AMOUNT 	20
+#define ARRIVAL_LIMIT 	30
+#define BURST_LIMIT 	30
+#define PRIORITY_LIMIT 	10
+
+// functional prototypes
+void randomScenario(MyScheduler &s, int thread_amount, int arrival_limit, int burst_limit, int priority_limit);
+void scenario0 (MyScheduler &s);
 
 int main(int argc, char* argv[])
 {
-	MyScheduler s[scheduler_num] = { 	
-		{FCFS, cpu_num},
-		{STRFwoP, cpu_num},
-		{STRFwP, cpu_num},
-		{PBS, cpu_num}
-	};
+	std::srand(std::time(0));
 
-	s[0].CreateThread(2, 6, 2, 2);
-	s[0].CreateThread(1, 5, 1, 1);
-	s[0].CreateThread(0, 4, 0, 0);
-	s[0].CreateThread(3, 7, 3, 3);
+	// declare schedulers
+	MyScheduler s_FCFS(FCFS, CPU_NUM);
+	MyScheduler s_STRFwoP(STRFwoP, CPU_NUM);
+	MyScheduler s_STRFwP(STRFwP, CPU_NUM);
+	MyScheduler s_PBS(PBS, CPU_NUM);
 
-	//for(int i = 0; i < 4; i++) {
-	//	s[i].Go();
-	//}
+	randomScenario(s_FCFS, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	s_FCFS.Go();
 
-	//s[0].Go();
-	s[3].Go();
+	//randomScenario(s_STRFwoP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	//s_STRFwoP.Go();
+
+	//randomScenario(s_STRFwP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	//s_STRFwP.Go();
+
+	randomScenario(s_PBS, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	s_PBS.Go();
 
 	return 0;
 }
 
+// generates a random thread combination
+void randomScenario( MyScheduler &s, int thread_amount, int arrival_limit, int burst_limit, int priority_limit) {
+	int arrival_time, remaining_time, priority, tid;
+
+	for (int i = 0; i < thread_amount; i++) {
+		arrival_time = rand()%arrival_limit;
+		remaining_time = rand()%burst_limit;
+		priority = rand()%priority_limit;
+		tid = i;
+
+		s.CreateThread(arrival_time, remaining_time, priority, tid);
+
+		printf("created (%d,%d,%d,%d)\n", arrival_time, remaining_time, priority, tid);
+	}
+}
+
+void scenario0 (MyScheduler &s) {
+	s.CreateThread(2, 6, 2, 2);
+	s.CreateThread(1, 5, 1, 1);
+	s.CreateThread(0, 4, 0, 0);
+	s.CreateThread(3, 7, 3, 3);
+}

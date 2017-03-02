@@ -36,16 +36,11 @@ bool MyScheduler::Dispatch()
 		case FCFS:		//First Come First Serve
 			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);	// sort the buffer by arrival time
 
-			// destroy any finished threads with vector::erase
-			// vector::erase shifts the remaining elements to the right which affects memory locations
-			// so below: we use processing_cpu to allow CPUs to continue processing the correct thread
-			for (std::vector<ThreadBuffer>::iterator it_eraser = buffer.begin(); it_eraser != buffer.end(); it_eraser++) {
-				if (it_eraser->thread.remaining_time == 0)
-					buffer.erase(it_eraser);
-				// quit when all threads have finished
-				if (buffer.empty())
-					return 0;
-			}
+			if (!MyScheduler::RemoveFinishedThreads())
+				return 0;
+
+			//MyScheduler::Display();
+
 			// assign each CPU a thread
 			for (unsigned int cpu_num = 0; cpu_num < num_cpu; cpu_num++) {
 				// iterate through the list of threads
@@ -105,7 +100,7 @@ bool MyScheduler::Dispatch()
 			int arrived = 0;			// number of threads that have arrived	
 			int lowest_priority = -1;	// lowest priority thread that is currently running
 			int cpu_low = -1;			// cpu that is running the lowest priority thread
-			bool cpu_available = 0 ;			// available cpu
+			bool cpu_available = 0 ;	// available cpu
 
 			// sort the buffer by arrival time
 			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);
@@ -118,12 +113,10 @@ bool MyScheduler::Dispatch()
 			// sort threads that have arrived by priority
 			std::sort(buffer.begin(), buffer.begin()+arrived, MyScheduler::CompareByPriority);
 
-			for (std::vector<ThreadBuffer>::iterator it_eraser = buffer.begin(); it_eraser != buffer.end(); it_eraser++) {
-				if (it_eraser->thread.remaining_time == 0)
-					buffer.erase(it_eraser);
-				if (buffer.empty())	// quit when all threads have finished
-					return 0;
-			}
+			if (!MyScheduler::RemoveFinishedThreads())
+				return 0;
+
+			//MyScheduler::Display();
 
 			// assign each CPU a thread
 			// iterate through the list of threads
@@ -171,6 +164,27 @@ bool MyScheduler::Dispatch()
 			throw 0;
 	}
 	return true;
+}
+
+// helper function that removes finished threads
+// destroy any finished threads with vector::erase
+int MyScheduler::RemoveFinishedThreads() {
+	for (std::vector<ThreadBuffer>::reverse_iterator it_eraser = buffer.rbegin(); it_eraser != buffer.rend(); it_eraser++) {
+		if (it_eraser->thread.remaining_time == 0) 
+			buffer.erase(std::next(it_eraser).base());
+		if (buffer.empty())	// quit when all threads have finished
+			return 0;
+	}
+	return 1;
+}
+
+// help function that displays current thread pool
+void MyScheduler::Display() 
+{
+	printf("pool: ");
+	for (unsigned int i = 0; i < buffer.size() && buffer[i].thread.arriving_time <= timer; ++i)
+		printf("%d ", buffer[i].thread.tid);
+	printf(" ----- ");
 }
 
 // helper function that sorts thread buffer by arrival_time 
