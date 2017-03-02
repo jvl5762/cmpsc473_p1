@@ -163,8 +163,6 @@ bool MyScheduler::Dispatch()
 					}
 				}
 			}
-			if (timer == 17)
-				return 0;
 			return 1;
 			break;
 		}
