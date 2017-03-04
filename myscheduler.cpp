@@ -1,14 +1,31 @@
-//myschedule.cpp
-/*Define all the functions in 'myschedule.h' here.*/
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File           : myschedule.cpp
+//  Description    : Defines all the functions in 'myschedule.h'
+//					 A thread based scheduler
+//
+//  Author         : Jeff Li, Frank Guo, Chen Dikan
+//  Last Modified  : 03/04/2017
+//
+
 #include "myscheduler.h"
 #include <algorithm>
 #include <vector>
 
-// global thread buffer that contains all created threads
+// global student-defined thread buffer that contains all created threads
 std::vector<ThreadBuffer> buffer;
 
-//Function to Create Thread(s) and insert them in the student
-//defined data structure
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function     : CreateThread
+// Description  : Function to Create Thread(s) and insert them in the student
+//				  defined data structure
+//
+// Inputs       : arriving_time - time the thread arrives
+//                remaining_time - amount of time left to process a thread
+//				  priority - priority level of a thread - lower is greater priority
+//				  tid - thread id
+// Outputs      : none
 void MyScheduler::CreateThread(int arriving_time, int remaining_time, int priority, int tid) //Thread ID not Process ID
 {
 	ThreadBuffer new_thread;
@@ -17,158 +34,91 @@ void MyScheduler::CreateThread(int arriving_time, int remaining_time, int priori
 	new_thread.thread.remaining_time = remaining_time;
 	new_thread.thread.priority = priority;
 	new_thread.thread.tid = tid;
-	new_thread.processing_cpu = -1;	// flag that thread has not begun processing yet
+	new_thread.processing_cpu = -1;	// thread has not begun processing yet
 
-	buffer.push_back(new_thread);
+	buffer.push_back(new_thread);	// new threads are pushed to the back of data struct
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function     : Dispatch
+// Description  : Check and remove finished threads
+//				  Decide which threads are in CPUs to be processed for
+//				  next clock cycle according to different policies
+//				  idea: sort buffer by policy standards, then assign the first
+//					    CPU-number of threads that have arrived
+//
+// Inputs       : none
+// Outputs      : none
 bool MyScheduler::Dispatch()
 {
-	//Todo: Check and remove finished threads
-	//Todo: Check if all the threads are finished; if so, return false
+	// Check and remove finished threads;
+	// Check if all the threads are finished; if so, return false
+	if (!MyScheduler::RemoveFinishedThreads()) return false;
 
-	int arriving_time[10], remaining_time[10], endtime, i, priority, process_id, n;
-	int remain = 0, time, wt = 0, tat = 0;	//wt is waiting time, and tat is turnaround time
-	//n = 5; //number of process
+	Sorting();	// sort the threads according to policy
 
 	switch(policy)
 	{
-		case FCFS:		//First Come First Serve
-			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);	// sort the buffer by arrival time
-
-			if (!MyScheduler::RemoveFinishedThreads())
-				return 0;
-
-			//MyScheduler::Display();
-
-			// assign each CPU a thread
-			for (unsigned int cpu_num = 0; cpu_num < num_cpu; cpu_num++) {
-				// iterate through the list of threads
-				for (unsigned int thread_num = 0; thread_num < buffer.size(); thread_num++) {
-					// if cpu has has not finished processing a thread, assign the cpu the same thread
-					if (buffer[thread_num].processing_cpu == (int) cpu_num)
-						CPUs[cpu_num] = &(buffer[thread_num].thread);
-					// if cpu is unassigned, find an available thread for the cpu to process
-					else if (CPUs[cpu_num] == NULL && buffer[thread_num].processing_cpu == -1 && buffer[thread_num].thread.arriving_time <= timer) {
-						CPUs[cpu_num] = &(buffer[thread_num].thread);
-						buffer[thread_num].processing_cpu = cpu_num;
-					}
-				}
-			}
-			return 1;
-			break;
-		case STRFwoP:	//Shortest Time Remaining First, without preemption
-			remaining_time[9] = 9999;
-			for (time = 0; remain != n; time++)
-			{
-				remaining_time[i]--;
-				if (remaining_time[i] == 0)
-				{
-					remain++;
-					endtime = time + 1;
-					process_id = i + 1;	//number of process id
-					wt += endtime - remaining_time[i] - arriving_time[i];	//total waiting time
-					tat += endtime - arriving_time[i];	//total turnaround time
-				}
-			}
-			break;
-		case STRFwP:	//Shortest Time Remaining First, with preemption
-			remaining_time[9] = 9999;	//set the last element of remaining time array as 9999
-			for (time = 0; remain != n; time++)
-			{
-				priority = 9;	//set priority to 9
-				for (i = 0; i < n; i++)
-				{
-					if (arriving_time[i] <= time&&remaining_time[i] < remaining_time[priority] && remaining_time[i]>0)
-					{
-						priority = i;	//set priority as i;
-					}
-				}
-				remaining_time[priority]--;
-				if (remaining_time[priority] == 0)
-				{
-					remain++;
-					endtime = time + 1;
-					process_id = priority + 1;	//number of process id
-					wt += endtime - remaining_time[priority] - arriving_time[priority];	//total wait time
-					tat += endtime - arriving_time[priority];	//total turnaround time
-				}
-			}
-			break;
-		case PBS:		//Priority Based Scheduling, with preemption
+		case FCFS:	case STRFwoP:	// First Come First Serve and Shortest Time Remaining First, without preemption
 		{
-			int arrived = 0;			// number of threads that have arrived	
-			int lowest_priority = -1;	// lowest priority thread that is currently running
-			int cpu_low = -1;			// cpu that is running the lowest priority thread
-			bool cpu_available = 0 ;	// available cpu
-
-			// sort the buffer by arrival time
-			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);
-
-			for (int i = 0; i <= timer && (unsigned int) i < buffer.size(); i++) {
-				if (buffer[i].thread.arriving_time <= timer)
-					arrived++;
-			}
-
-			// sort threads that have arrived by priority
-			std::sort(buffer.begin(), buffer.begin()+arrived, MyScheduler::CompareByPriority);
-
-			if (!MyScheduler::RemoveFinishedThreads())
-				return 0;
-
-			//MyScheduler::Display();
-
-			// assign each CPU a thread
-			// iterate through the list of threads
-			for (unsigned int thread_num = 0; buffer[thread_num].thread.arriving_time <= timer && thread_num < num_cpu && thread_num < buffer.size(); thread_num++) {
-				// if cpu has has not finished processing a thread, assign the cpu the same thread
-				if (buffer[thread_num].processing_cpu != -1)
-					CPUs[buffer[thread_num].processing_cpu] = &(buffer[thread_num].thread);
-				else {
-					// if thread is unassigned, find an available cpu to process
-					for (unsigned int cpu_num = 0; cpu_num < num_cpu  && !cpu_available; cpu_num++) {
-						cpu_available = 1;
-						for (unsigned int i = 0; i < buffer.size() && cpu_available; i++) {
-							if (buffer[i].processing_cpu == (int) cpu_num)
-								cpu_available = 0;
-						}
-						if (cpu_available) {
-							CPUs[cpu_num] = &(buffer[thread_num].thread);
-							buffer[thread_num].processing_cpu = cpu_num;
-						}
+			for (unsigned int i = 0; i < num_cpu; i++) {			// assign each CPU a thread
+				for (unsigned int j = 0; j < buffer.size(); j++) {	// iterate through the list of threads
+					// if cpu has not finished processing a thread, assign the same thread
+					// else if cpu is unassigned, find a thread for the cpu to process
+					if (buffer[j].processing_cpu == (int) i) {
+						CPUs[i] = &(buffer[j].thread);
+						break;
 					}
-					// if cpu was not found, switch with cpu that is processing the lowest priority thread
-					if (buffer[thread_num].processing_cpu == -1) {
-						for (unsigned int i = 0; i < buffer.size(); i++) {
-							if (buffer[i].processing_cpu != -1 && buffer[i].thread.priority > lowest_priority) {
-								lowest_priority = buffer[i].thread.priority;
-								cpu_low = buffer[i].processing_cpu;
-							}
-						}
-						for (unsigned int i = 0; i < buffer.size(); i++) {
-							if (buffer[i].processing_cpu == cpu_low) {
-								buffer[i].processing_cpu = -1;
-								break;
-							}
-						}
-						CPUs[cpu_low] = &(buffer[thread_num].thread);
-						buffer[thread_num].processing_cpu = cpu_low;
+					else if (CPUs[i] == NULL && buffer[j].processing_cpu == -1 && buffer[j].thread.arriving_time <= timer) {
+						CPUs[i] = &(buffer[j].thread);
+						buffer[j].processing_cpu = i;
+						break;
 					}
 				}
 			}
-			return 1;
+			break;
+		}
+		case STRFwP: case PBS:	//Shortest Time Remaining First, with preemption and Priority Based Scheduling, with preemption
+		{
+			// reset CPUs
+			for (unsigned i = 0; i < buffer.size(); i++)
+				buffer[i].processing_cpu = -1;
+
+			for (unsigned int i = 0; i < num_cpu; i++) {			// assign each CPU a thread
+				for (unsigned int j = 0; j < buffer.size(); j++) {	// iterate through the list of threads
+					// iterate through buffer, which is already in ascending order by remaining_time/priority
+					// if the thread has arrived, assign cpu to that thread
+					if (buffer[j].processing_cpu == -1 && buffer[j].thread.arriving_time <= timer) {
+						CPUs[i] = &(buffer[j].thread);
+						buffer[j].processing_cpu = i;
+						break;
+					}
+					else
+						CPUs[i] = NULL;
+				}
+			}
 			break;
 		}
 		default :
 			cout<<"Invalid policy!";
 			throw 0;
 	}
+
+	MyScheduler::Display();
+
 	return true;
 }
 
-// helper function that removes finished threads
-// destroy any finished threads with vector::erase
-int MyScheduler::RemoveFinishedThreads() {
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function     : RemoveFinishedThreads
+// Description  : Remove finished threads and check if buffer is empty
+//
+// Inputs       : none
+// Outputs      : 1 if there are still threads to process, 0 if buffer is empty
+int MyScheduler::RemoveFinishedThreads() 
+{
 	for (std::vector<ThreadBuffer>::reverse_iterator it_eraser = buffer.rbegin(); it_eraser != buffer.rend(); it_eraser++) {
 		if (it_eraser->thread.remaining_time == 0) 
 			buffer.erase(std::next(it_eraser).base());
@@ -178,13 +128,46 @@ int MyScheduler::RemoveFinishedThreads() {
 	return 1;
 }
 
-// help function that displays current thread pool
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function     : Sorting
+// Description  : Sort through all threads so that the buffer is in an order
+//				  according to policy
+//
+// Inputs       : none
+// Outputs      : none
+void MyScheduler::Sorting() 
+{
+	switch(policy)
+	{
+		case FCFS:
+			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByArrivalTime);
+			break;
+		case STRFwoP: case STRFwP:
+			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByRemainingTime);
+			break;
+		case PBS:
+			std::sort(buffer.begin(), buffer.end(), MyScheduler::CompareByPriority);
+			break;
+
+		//if (sorted == 0) {
+		//	printf("InitialSorting: ");
+		//	for (unsigned int i = 0; i < buffer.size(); ++i)
+		//		printf("%d[%d] ", buffer[i].thread.tid, buffer[i].thread.priority);
+		//	printf("\n");
+		//}
+	}
+}
+
+// helper function that displays the current thread pool
 void MyScheduler::Display() 
 {
 	printf("pool: ");
-	for (unsigned int i = 0; i < buffer.size() && buffer[i].thread.arriving_time <= timer; ++i)
-		printf("%d ", buffer[i].thread.tid);
-	printf(" ----- ");
+	for (unsigned int i = 0; i < buffer.size(); ++i) {
+		if (buffer[i].thread.arriving_time <= timer)
+			printf("%d[%d] ", buffer[i].thread.tid, buffer[i].thread.priority);
+	}
+	printf("\n");
 }
 
 // helper function that sorts thread buffer by arrival_time 
@@ -194,7 +177,19 @@ bool MyScheduler::CompareByArrivalTime(const ThreadBuffer &a, const ThreadBuffer
 }
 
 // helper function that sorts thread buffer by arrival_time 
+bool MyScheduler::CompareByRemainingTime(const ThreadBuffer &a, const ThreadBuffer &b)
+{
+	if (a.thread.remaining_time == b.thread.remaining_time)
+		return (a.thread.arriving_time < b.thread.arriving_time);
+	else
+		return (a.thread.remaining_time < b.thread.remaining_time);
+}
+
+// helper function that sorts thread buffer by arrival_time 
 bool MyScheduler::CompareByPriority(const ThreadBuffer &a, const ThreadBuffer &b)
 {
-	return (a.thread.priority < b.thread.priority);
+	if (a.thread.priority == b.thread.priority)
+		return (a.thread.arriving_time < b.thread.arriving_time);
+	else
+		return (a.thread.priority < b.thread.priority);
 }

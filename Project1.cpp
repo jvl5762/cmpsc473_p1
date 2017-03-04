@@ -4,10 +4,10 @@
 #include "myscheduler.h"
 #include <ctime> 
 
-#define CPU_NUM 		4
-#define THREAD_AMOUNT 	20
-#define ARRIVAL_LIMIT 	30
-#define BURST_LIMIT 	30
+#define CPU_NUM 		2
+#define THREAD_AMOUNT 	10
+#define ARRIVAL_LIMIT 	50
+#define BURST_LIMIT 	15
 #define PRIORITY_LIMIT 	10
 
 // functional prototypes
@@ -27,11 +27,11 @@ int main(int argc, char* argv[])
 	randomScenario(s_FCFS, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
 	s_FCFS.Go();
 
-	//randomScenario(s_STRFwoP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
-	//s_STRFwoP.Go();
+	randomScenario(s_STRFwoP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	s_STRFwoP.Go();
 
-	//randomScenario(s_STRFwP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
-	//s_STRFwP.Go();
+	randomScenario(s_STRFwP, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
+	s_STRFwP.Go();
 
 	randomScenario(s_PBS, THREAD_AMOUNT, ARRIVAL_LIMIT, BURST_LIMIT, PRIORITY_LIMIT);
 	s_PBS.Go();
@@ -51,7 +51,7 @@ void randomScenario( MyScheduler &s, int thread_amount, int arrival_limit, int b
 
 		s.CreateThread(arrival_time, remaining_time, priority, tid);
 
-		printf("created (%d,%d,%d,%d)\n", arrival_time, remaining_time, priority, tid);
+		//printf("created (%d,%d,%d,%d)\n", arrival_time, remaining_time, priority, tid);
 	}
 }
 

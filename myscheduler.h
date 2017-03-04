@@ -24,7 +24,9 @@ public:
 
 	//Declare additional methods(s) below if needed.
    int RemoveFinishedThreads();
+   void Sorting();
    void Display();
 	static bool CompareByArrivalTime(const ThreadBuffer &a, const ThreadBuffer &b);
+   static bool CompareByRemainingTime(const ThreadBuffer &a, const ThreadBuffer &b);
    static bool CompareByPriority(const ThreadBuffer &a, const ThreadBuffer &b);
 };
